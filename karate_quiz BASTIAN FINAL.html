@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Karate Quiz</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f0f0; padding: 20px; overflow-x: hidden; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .center { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; color: #333; margin: 20px 0; font-size: 28px; }
+        h2 { font-size: 20px; margin: 15px 0; }
+        p { text-align: center; color: #666; margin-bottom: 30px; }
+        .section { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; }
+        
+        button { 
+            padding: 12px 16px; 
+            margin: 6px; 
+            border: 2px solid #333; 
+            background: white; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-size: 14px;
+            min-height: 44px;
+            min-width: 44px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        button:active { opacity: 0.8; }
+        button.selected { background: #dc2626; color: white; border-color: #dc2626; }
+        
+        button.start { 
+            background: #dc2626; 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 16px; 
+            font-size: 16px; 
+            margin-top: 20px;
+            min-height: 50px;
+        }
+        
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
+            gap: 8px; 
+            margin: 15px 0; 
+        }
+        
+        .flex { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            margin: 15px 0; 
+        }
+        
+        .card { 
+            background: #dc2626; 
+            color: white; 
+            padding: 60px 20px; 
+            text-align: center; 
+            border-radius: 8px; 
+            margin: 30px 0; 
+            font-size: 32px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            user-select: none;
+            -webkit-user-select: none;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card.revealed { background: #1f2937; }
+        
+        .buttons-group { 
+            display: flex; 
+            gap: 8px; 
+            margin: 20px 0; 
+        }
+        
+        .btn-green { 
+            background: #10b981; 
+            color: white; 
+            border: none; 
+            flex: 1; 
+            padding: 14px; 
+            border-radius: 4px;
+            min-height: 48px;
+            font-size: 14px;
+        }
+        
+        .btn-red { 
+            background: #ef4444; 
+            color: white; 
+            border: none; 
+            flex: 1; 
+            padding: 14px; 
+            border-radius: 4px;
+            min-height: 48px;
+            font-size: 14px;
+        }
+        
+        .btn-blue { 
+            background: #0ea5e9; 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 14px; 
+            margin: 10px 0; 
+            border-radius: 4px;
+            min-height: 48px;
+            font-size: 14px;
+        }
+        
+        .progress { 
+            background: #e0e0e0; 
+            height: 8px; 
+            border-radius: 4px; 
+            margin: 20px 0; 
+        }
+        
+        .progress-fill { 
+            background: #dc2626; 
+            height: 100%; 
+            transition: width 0.3s; 
+        }
+        
+        .score-text { 
+            text-align: center; 
+            color: #666; 
+            margin: 10px 0; 
+            font-size: 14px; 
+        }
+        
+        .result { 
+            text-align: center; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 8px; 
+            margin: 40px auto; 
+        }
+        
+        .result h1 { font-size: 36px; }
+        .result .number { font-size: 56px; color: #dc2626; margin: 20px 0; }
+        .result .percent { font-size: 24px; color: #333; }
+        
+        .label { 
+            color: #666; 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 10px; 
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        
+        .top-bar button {
+            margin: 0;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="config-screen" class="screen active">
+    <div class="center">
+        <h1>🥋 Karate Teknik Quiz</h1>
+        <p>Test din viden om japanske teknikker</p>
+        
+        <div class="section">
+            <h2>Vælg pensum:</h2>
+            <div class="grid" id="levels"></div>
+            <button onclick="selectAllLevels()" style="width: 100%; background: #f0f0f0; color: #0ea5e9; border: 1px solid #ccc;">Vælg alle</button>
+        </div>
+        
+        <div class="section">
+            <h2>Vælg kategorier:</h2>
+            <div class="flex" id="categories"></div>
+            <button onclick="selectAllCategories()" style="width: 100%; background: #f0f0f0; color: #0ea5e9; border: 1px solid #ccc;">Vælg alle</button>
+        </div>
+        
+        <button class="start" ontouchend="startQuiz()" onclick="startQuiz()">Start Quiz</button>
+    </div>
+</div>
+
+<div id="quiz-screen" class="screen">
+    <div class="center">
+        <div class="top-bar">
+            <button ontouchend="goBack()" onclick="goBack()">← Tilbage</button>
+            <span id="progress-text" style="font-size: 14px; color: #666; flex: 1; text-align: right;"></span>
+        </div>
+        <div class="progress"><div class="progress-fill" id="progress-bar"></div></div>
+        
+        <div class="card" id="quiz-card" ontouchend="revealAnswer()" onclick="revealAnswer()">
+            <div id="card-content"></div>
+        </div>
+        
+        <button class="btn-blue" ontouchend="speak()" onclick="speak()">🔊 Lyt til japansk</button>
+        
+        <div class="buttons-group" id="feedback-buttons" style="display: none;">
+            <button class="btn-green" ontouchend="markCorrect()" onclick="markCorrect()">✓ Vidste det</button>
+            <button class="btn-red" ontouchend="markWrong()" onclick="markWrong()">✗ Vidste det ikke</button>
+        </div>
+        
+        <div class="score-text">Rigtige: <span id="correct-count">0</span> / <span id="current-count">0</span></div>
+    </div>
+</div>
+
+<div id="result-screen" class="screen">
+    <div class="center">
+        <div class="result">
+            <h1>✅ Quiz færdig!</h1>
+            <div class="number" id="result-score"></div>
+            <div class="percent" id="result-percent"></div>
+            <button class="start" ontouchend="goBack()" onclick="goBack()" style="margin-top: 30px;">← Tilbage til opsætning</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const allData = [{"niveau": "12. kyu", "kategori": "Spark", "japansk": "Mae hiza geri", "dansk": "Frontalt knæspark", "retning": "Mae / forlæns", "vaaben": null}, {"niveau": "12. kyu", "kategori": "Stillinger", "japansk": "Anza", "dansk": "Skrædderstilling", "retning": null, "vaaben": null}, {"niveau": "12. kyu", "kategori": "Stillinger", "japansk": "Fudo dachi", "dansk": "Udgangsstilling", "retning": null, "vaaben": null}, {"niveau": "12. kyu", "kategori": "Stillinger", "japansk": "Heiko Dachi", "dansk": "Parallelstilling", "retning": null, "vaaben": null}, {"niveau": "12. kyu", "kategori": "Stillinger", "japansk": "Seiza", "dansk": "Siddende stilling", "retning": null, "vaaben": null}, {"niveau": "12. kyu", "kategori": "Stillinger", "japansk": "Yoi dachi", "dansk": "Klarstilling", "retning": null, "vaaben": null}, {"niveau": "12. kyu", "kategori": "Stød og slag", "japansk": "Seiken chudan tsuki", "dansk": "Stød mod mellemgulvet", "retning": "Chudan / mellemgulv", "vaaben": "Seiken / knyttet hånd"}, {"niveau": "12. kyu", "kategori": "Stød og slag", "japansk": "Seiken gedan tsuki", "dansk": "Stød mod skridtet", "retning": "Gedan / lavt/skridt", "vaaben": "Seiken / knyttet hånd"}, {"niveau": "12. kyu", "kategori": "Stød og slag", "japansk": "Seiken jodan tsuki", "dansk": "Stød mod hovedet", "retning": "Jodan / hoved", "vaaben": "Seiken / knyttet hånd"}, {"niveau": "11. kyu", "kategori": "Parader", "japansk": "Jodan uke", "dansk": "Opadgående parade", "retning": "Jodan / hoved", "vaaben": null}, {"niveau": "11. kyu", "kategori": "Spark", "japansk": "Haisoku kin geri", "dansk": "Skridtspark med vristen", "retning": null, "vaaben": "Haisoku / vrist"}, {"niveau": "11. kyu", "kategori": "Stillinger", "japansk": "Uchi hachi ji dachi", "dansk": "Stilling med indadvendte tæer (duetæerstilling)", "retning": "Uchi / indvendig", "vaaben": null}, {"niveau": "11. kyu", "kategori": "Stød og slag", "japansk": "Seiken morote chudan tsuki", "dansk": "Dobbelt stød mod mellemgulvet", "retning": "Chudan / mellemgulv", "vaaben": "Seiken / knyttet hånd"}, {"niveau": "11. kyu", "kategori": "Stød og slag", "japansk": "Seiken morote gedan tsuki", "dansk": "Dobbelt stød mod skridtet", "retning": "Gedan / lavt/skridt", "vaaben": "Seiken / knyttet hånd"}, {"niveau": "11. kyu", "kategori": "Stød og slag", "japansk": "Seiken morote jodan tsuki", "dansk": "Dobbelt stød mod hovedet", "retning": "Jodan / hoved", "vaaben": "Seiken / knyttet hånd"}, {"niveau": "10. kyu", "kategori": "Parader", "japansk": "Gedan barai", "dansk": "Nedadgående parade med krydsoptræk ved ansigtet", "retning": "Gedan / lavt/skridt", "vaaben": null}, {"niveau": "10. kyu", "kategori": "Parader", "japansk": "Mae gedan barai", "dansk": "Nedadgående parade", "retning": "Gedan / lavt/skridt; Mae / forlæns", "vaaben": null}, {"niveau": "10. kyu", "kategori": "Parader", "japansk": "Morote gedan barai", "dansk": "Dobbelt nedadgående parade", "retning": "Gedan / lavt/skridt", "vaaben": null}, {"niveau": "10. kyu", "kategori": "Spark", "japansk": "Chusoku chudan mae geri", "dansk": "Frontalt spark med fodballen i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Mae / forlæns", "vaaben": "Chusoku / fodballen"}, {"niveau": "10. kyu", "kategori": "Stillinger", "japansk": "Zen kutsu dachi", "dansk": "Forlæns stilling", "retning": null, "vaaben": null}, {"niveau": "10. kyu", "kategori": "Stød og slag", "japansk": "Chudan tate tsuki", "dansk": "Lodret stød mod mellemgulvet", "retning": "Chudan / mellemgulv", "vaaben": null}, {"niveau": "10. kyu", "kategori": "Stød og slag", "japansk": "Gedan tate tsuki", "dansk": "Lodret stød mod skridtet", "retning": "Gedan / lavt/skridt", "vaaben": null}, {"niveau": "10. kyu", "kategori": "Stød og slag", "japansk": "Jodan tate tsuki", "dansk": "Lodret stød mod hovedet", "retning": "Jodan / hoved", "vaaben": null}, {"niveau": "9. kyu", "kategori": "Parader", "japansk": "Soto uke", "dansk": "Udvendig parade", "retning": "Soto / udvendig", "vaaben": null}, {"niveau": "9. kyu", "kategori": "Parader", "japansk": "Uchi uke", "dansk": "Indvendig parade", "retning": "Uchi / indvendig", "vaaben": null}, {"niveau": "9. kyu", "kategori": "Spark", "japansk": "Chusoku jodan mae geri", "dansk": "Frontalt spark med fodballen i hovedhøjde", "retning": "Jodan / hoved; Mae / forlæns", "vaaben": "Chusoku / fodballen"}, {"niveau": "9. kyu", "kategori": "Stillinger", "japansk": "Kokutsu dachi", "dansk": "Baglæns stilling", "retning": null, "vaaben": null}, {"niveau": "9. kyu", "kategori": "Stillinger", "japansk": "Sanchin dachi", "dansk": "Basisstilling", "retning": null, "vaaben": null}, {"niveau": "9. kyu", "kategori": "Stød og slag", "japansk": "Ago uchi", "dansk": "Snapstød mod hagen", "retning": "Uchi / indvendig", "vaaben": null}, {"niveau": "8. kyu", "kategori": "Parader", "japansk": "Mawashi mae gedan barai", "dansk": "Cirkulær nedadgående parade", "retning": "Gedan / lavt/skridt; Mae / forlæns", "vaaben": null}, {"niveau": "8. kyu", "kategori": "Parader", "japansk": "Sune uke", "dansk": "Skinnebensparade", "retning": null, "vaaben": null}, {"niveau": "8. kyu", "kategori": "Spark", "japansk": "Chudan mawashi geri", "dansk": "Cirkelspark i mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": null}, {"niveau": "8. kyu", "kategori": "Spark", "japansk": "Gedan mawashi geri", "dansk": "Lårspark", "retning": "Gedan / lavt/skridt", "vaaben": null}, {"niveau": "8. kyu", "kategori": "Spark", "japansk": "Hiza chudan mawashi geri", "dansk": "Cirkel knæspark i mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": null}, {"niveau": "8. kyu", "kategori": "Spark", "japansk": "Kansetsu geri", "dansk": "Lavt sidelæns spark", "retning": null, "vaaben": null}, {"niveau": "8. kyu", "kategori": "Stillinger", "japansk": "Kamae dachi", "dansk": "Kampstilling", "retning": "Mae / forlæns", "vaaben": null}, {"niveau": "8. kyu", "kategori": "Stillinger", "japansk": "Kiba dachi", "dansk": "Ridestilling", "retning": null, "vaaben": null}, {"niveau": "8. kyu", "kategori": "Stillinger", "japansk": "Shiko dachi", "dansk": "Sumo-stilling", "retning": null, "vaaben": null}, {"niveau": "8. kyu", "kategori": "Stød og slag", "japansk": "Seiken age tsuki", "dansk": "Opadgående stød til hagen", "retning": null, "vaaben": "Seiken / knyttet hånd"}, {"niveau": "8. kyu", "kategori": "Stød og slag", "japansk": "Seiken chudan kake tsuki", "dansk": "Krogstød i mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": "Seiken / knyttet hånd"}, {"niveau": "8. kyu", "kategori": "Stød og slag", "japansk": "Seiken shita tsuki", "dansk": "Lavt omvendt stød", "retning": null, "vaaben": "Seiken / knyttet hånd"}, {"niveau": "7. kyu", "kategori": "Parader", "japansk": "Morote uchi uke", "dansk": "Forstærket indvendig parade", "retning": "Uchi / indvendig", "vaaben": null}, {"niveau": "7. kyu", "kategori": "Parader", "japansk": "Renraku uchi uke og gedan barai", "dansk": "Kombination af indvendig- og nedadgående parade", "retning": "Gedan / lavt/skridt; Uchi / indvendig", "vaaben": null}, {"niveau": "7. kyu", "kategori": "Parader", "japansk": "Shuto mawashi uke", "dansk": "Cirkelparade med håndkanten", "retning": null, "vaaben": "Shuto / håndkant"}, {"niveau": "7. kyu", "kategori": "Spark", "japansk": "Jodan mawashi geri", "dansk": "Cirkelspark i hovedhøjde", "retning": "Jodan / hoved", "vaaben": null}, {"niveau": "7. kyu", "kategori": "Spark", "japansk": "Mae keage geri", "dansk": "Højt frontspark med strakt ben", "retning": "Mae / forlæns", "vaaben": null}, {"niveau": "7. kyu", "kategori": "Spark", "japansk": "Sokuto chudan yoko geri", "dansk": "Sidelæns spark i mavehøjde", "retning": "Chudan / mellemgulv; Yoko / sidelæns", "vaaben": "Sokuto / fodkant"}, {"niveau": "7. kyu", "kategori": "Spark", "japansk": "Sokuto jodan yoko geri", "dansk": "Sidelæns spark i hovedhøjde", "retning": "Jodan / hoved; Yoko / sidelæns", "vaaben": "Sokuto / fodkant"}, {"niveau": "7. kyu", "kategori": "Spark", "japansk": "Sokuto jodan yoko keage geri", "dansk": "Højt sidelæns spark med strakt ben", "retning": "Jodan / hoved; Yoko / sidelæns", "vaaben": "Sokuto / fodkant"}, {"niveau": "7. kyu", "kategori": "Spark", "japansk": "Sokuto uchi mawashi keage geri", "dansk": "Indvendig strakt cirkelspark", "retning": "Uchi / indvendig", "vaaben": "Sokuto / fodkant"}, {"niveau": "7. kyu", "kategori": "Spark", "japansk": "Teisoku soto mawashi keage geri", "dansk": "Udvendig strakt cirkelspark", "retning": "Soto / udvendig", "vaaben": "Teisoku / fodsål"}, {"niveau": "7. kyu", "kategori": "Stillinger", "japansk": "Musubi dachi", "dansk": "Stilling med samlede hæle", "retning": null, "vaaben": null}, {"niveau": "7. kyu", "kategori": "Stillinger", "japansk": "Neko ashi dachi", "dansk": "Kat stilling", "retning": null, "vaaben": null}, {"niveau": "7. kyu", "kategori": "Stød og slag", "japansk": "Tettsui Komi Kame", "dansk": "Udvendig håndkantslag med knyttet hånd mod hovedet", "retning": null, "vaaben": "Tettsui / hammernæve"}, {"niveau": "7. kyu", "kategori": "Stød og slag", "japansk": "Tettsui chudan yoko uchi", "dansk": "Sidelæns håndkantslag med knyttet hånd mod overkroppen", "retning": "Chudan / mellemgulv; Yoko / sidelæns; Uchi / indvendig", "vaaben": "Tettsui / hammernæve"}, {"niveau": "7. kyu", "kategori": "Stød og slag", "japansk": "Tettsui ganmen uchi uchi", "dansk": "Indvendig håndkantslag med knyttet hånd i hovedhøjde", "retning": "Uchi / indvendig", "vaaben": "Tettsui / hammernæve"}, {"niveau": "7. kyu", "kategori": "Stød og slag", "japansk": "Tettsui gedan yoko uchi", "dansk": "Sidelæns håndkantslag med knyttet hånd mod skridtet", "retning": "Gedan / lavt/skridt; Yoko / sidelæns; Uchi / indvendig", "vaaben": "Tettsui / hammernæve"}, {"niveau": "7. kyu", "kategori": "Stød og slag", "japansk": "Tettsui hizo uchi", "dansk": "Udvendig håndkantslag med knyttet hånd mod ribbenene", "retning": "Uchi / indvendig", "vaaben": "Tettsui / hammernæve"}, {"niveau": "7. kyu", "kategori": "Stød og slag", "japansk": "Tettsui jodan yoko uchi", "dansk": "Sidelæns håndkantslag med knyttet hånd mod hovedet", "retning": "Jodan / hoved; Yoko / sidelæns; Uchi / indvendig", "vaaben": "Tettsui / hammernæve"}, {"niveau": "7. kyu", "kategori": "Stød og slag", "japansk": "Tettsui oroshi ganmen uchi", "dansk": "Nedadgående håndkantslag med knyttet hånd mod hovedet", "retning": "Uchi / indvendig", "vaaben": "Tettsui / hammernæve"}, {"niveau": "6. kyu", "kategori": "Parader", "japansk": "Osae uke", "dansk": "Tryk parade med håndfladen", "retning": null, "vaaben": null}, {"niveau": "6. kyu", "kategori": "Spark", "japansk": "Kakato ushiro geri", "dansk": "Baglæns spark", "retning": "Ushiro / bagud", "vaaben": "Kakato / hæl"}, {"niveau": "6. kyu", "kategori": "Spark", "japansk": "Soto oroshi kakato keage geri", "dansk": "Udvendig nedadgående strakt spark", "retning": "Soto / udvendig", "vaaben": "Kakato / hæl"}, {"niveau": "6. kyu", "kategori": "Spark", "japansk": "Uchi oroshi kakato keage geri", "dansk": "Indvendig nedadgående strakt spark", "retning": "Uchi / indvendig", "vaaben": "Kakato / hæl"}, {"niveau": "6. kyu", "kategori": "Stillinger", "japansk": "Heisoku dachi", "dansk": "Stilling med samlede fødder", "retning": null, "vaaben": "Heisoku / vrist/overside fod"}, {"niveau": "6. kyu", "kategori": "Stillinger", "japansk": "Tsuru ashi dachi", "dansk": "Stilling på et ben", "retning": null, "vaaben": null}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Chudan jun tsuki", "dansk": "Sidelæns stød med knyttet hånd i mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": null}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Gedan jun tsuki", "dansk": "Sidelæns stød med knyttet hånd mod skridtet", "retning": "Gedan / lavt/skridt", "vaaben": null}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Haito chudan uchi", "dansk": "Slag med håndkant ved tommelfinger i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": "Haito / håndkant ved tommelfinger"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Haito gedan uchi", "dansk": "Slag med håndkant ved tommelfinger mod skridtet", "retning": "Gedan / lavt/skridt; Uchi / indvendig", "vaaben": "Haito / håndkant ved tommelfinger"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Haito jodan uchi", "dansk": "Slag med håndkant ved tommelfinger mod hovedet", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Haito / håndkant ved tommelfinger"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Jodan jun tsuki", "dansk": "Sidelæns stød med knyttet hånd mod hovedet", "retning": "Jodan / hoved", "vaaben": null}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Uraken hizo uchi", "dansk": "Lavt omvendt knoslag mod ribben/nyre", "retning": "Uchi / indvendig", "vaaben": "Uraken / omvendt kno"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Uraken mawashi uchi", "dansk": "Cirkulært omvendt knoslag", "retning": "Uchi / indvendig", "vaaben": "Uraken / omvendt kno"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Uraken oroshi uchi", "dansk": "Nedadgående omvendt knoslag", "retning": "Uchi / indvendig", "vaaben": "Uraken / omvendt kno"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Uraken sayu uchi", "dansk": "Sidelæns omvendt knoslag", "retning": "Uchi / indvendig", "vaaben": "Uraken / omvendt kno"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Uraken shomen uchi", "dansk": "Fremadrettet omvendt knoslag", "retning": "Uchi / indvendig", "vaaben": "Uraken / omvendt kno"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Yonhon chudan nukite", "dansk": "Fingerstik med 4 fingre mod mellemgulvet", "retning": "Chudan / mellemgulv", "vaaben": "Nukite / fingerstik"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Yonhon gedan nukite", "dansk": "Fingerstik med 4 fingre mod skridtet", "retning": "Gedan / lavt/skridt", "vaaben": "Nukite / fingerstik"}, {"niveau": "6. kyu", "kategori": "Stød og slag", "japansk": "Yonhon jodan nukite", "dansk": "Fingerstik med 4 fingre mod hovedet", "retning": "Jodan / hoved", "vaaben": "Nukite / fingerstik"}, {"niveau": "5. kyu", "kategori": "Parader", "japansk": "Gedan juji uke", "dansk": "Nedadgående krydsparade", "retning": "Gedan / lavt/skridt", "vaaben": null}, {"niveau": "5. kyu", "kategori": "Parader", "japansk": "Hiji chudan uke", "dansk": "Albueparade i mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": "Hiji / albue"}, {"niveau": "5. kyu", "kategori": "Parader", "japansk": "Jodan juji uke", "dansk": "Opadgående krydsparade", "retning": "Jodan / hoved", "vaaben": null}, {"niveau": "5. kyu", "kategori": "Spark", "japansk": "Chudan kakato kake geri", "dansk": "Krogspark til mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": "Kakato / hæl"}, {"niveau": "5. kyu", "kategori": "Spark", "japansk": "Ushiro yoko sokuto geri", "dansk": "Baglæns sidelæns spark", "retning": "Ushiro / bagud; Yoko / sidelæns", "vaaben": "Sokuto / fodkant"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Chudan hiji uchi", "dansk": "Albuestød i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": "Hiji / albue"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Chudan mae hiji ate", "dansk": "Opadgående albuestød mod mellemgulvet", "retning": "Chudan / mellemgulv; Mae / forlæns", "vaaben": "Hiji / albue"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Hiji age ate", "dansk": "Opadgående albueslag i hovedhøjde", "retning": null, "vaaben": "Hiji / albue"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Hiji oroshi uchi", "dansk": "Nedadgående albuestød", "retning": "Uchi / indvendig", "vaaben": "Hiji / albue"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Hiji ushiro uchi", "dansk": "Bagudrettet albuestød mod mellemgulvet", "retning": "Ushiro / bagud; Uchi / indvendig", "vaaben": "Hiji / albue"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Jodan hiji uchi", "dansk": "Albuestød mod hovedet", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Hiji / albue"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Jodan ippon nukite", "dansk": "Fingerstik med en finger mod ansigtet", "retning": "Jodan / hoved", "vaaben": "Nukite / fingerstik"}, {"niveau": "5. kyu", "kategori": "Stød og slag", "japansk": "Jodan nihon nukite", "dansk": "Fingerstik med to fingre mod ansigtet", "retning": "Jodan / hoved", "vaaben": "Nukite / fingerstik"}, {"niveau": "4. kyu", "kategori": "Parader", "japansk": "Mae mawashi uke", "dansk": "Dobbelt cirkelparade", "retning": "Mae / forlæns", "vaaben": null}, {"niveau": "4. kyu", "kategori": "Parader", "japansk": "Shuto gedan barai", "dansk": "Nedadgående parade med håndkant med krydsoptræk ved ansigtet", "retning": "Gedan / lavt/skridt", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Parader", "japansk": "Shuto jodan uke", "dansk": "Opadgående parade med håndkant", "retning": "Jodan / hoved", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Parader", "japansk": "Shuto mae gedan barai", "dansk": "Nedadgående parade med håndkant", "retning": "Gedan / lavt/skridt; Mae / forlæns", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Parader", "japansk": "Shuto soto uke", "dansk": "Udvendig parade med håndkant", "retning": "Soto / udvendig", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Parader", "japansk": "Shuto uchi uke", "dansk": "Indvendig parade med håndkant", "retning": "Uchi / indvendig", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Spark", "japansk": "Heisoku jodan uchi mawashi geri", "dansk": "Indvendig cirkelspark i hagehøjde med vristen", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Heisoku / vrist/overside fod"}, {"niveau": "4. kyu", "kategori": "Spark", "japansk": "Jodan kakato kake geri", "dansk": "Krogspark i hovedhøjde", "retning": "Jodan / hoved", "vaaben": "Kakato / hæl"}, {"niveau": "4. kyu", "kategori": "Spark", "japansk": "Mae tobi geri", "dansk": "Flyvende frontspark i to variationer", "retning": "Mae / forlæns", "vaaben": null}, {"niveau": "4. kyu", "kategori": "Stød og slag", "japansk": "Shuto ganmen soto uchi", "dansk": "Udvendig håndkantslag i hovedhøjde", "retning": "Soto / udvendig; Uchi / indvendig", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Stød og slag", "japansk": "Shuto ganmen uchi uchi", "dansk": "Indvendig håndkantslag i hovedhøjde", "retning": "Uchi / indvendig", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Stød og slag", "japansk": "Shuto hizo uchi", "dansk": "Udvendig håndkantslag mod ribbenene", "retning": "Uchi / indvendig", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Stød og slag", "japansk": "Shuto sakotsu uchi", "dansk": "Nedadgående håndkantslag mod kravebenet", "retning": "Uchi / indvendig", "vaaben": "Shuto / håndkant"}, {"niveau": "4. kyu", "kategori": "Stød og slag", "japansk": "Shuto uchi komi", "dansk": "Fremadrettet håndkantslag mod kravebenet", "retning": "Uchi / indvendig", "vaaben": "Shuto / håndkant"}, {"niveau": "3. kyu", "kategori": "Parader", "japansk": "Shotei chudan uke", "dansk": "Udvendig parade med håndfladekant", "retning": "Chudan / mellemgulv", "vaaben": "Shotei / håndfladekant"}, {"niveau": "3. kyu", "kategori": "Parader", "japansk": "Shotei gedan uke", "dansk": "Nedadgående parade med håndfladekant", "retning": "Gedan / lavt/skridt", "vaaben": "Shotei / håndfladekant"}, {"niveau": "3. kyu", "kategori": "Parader", "japansk": "Shotei jodan uke", "dansk": "Opadgående parade med håndfladekant", "retning": "Jodan / hoved", "vaaben": "Shotei / håndfladekant"}, {"niveau": "3. kyu", "kategori": "Parader", "japansk": "Shuto gedan juji uke", "dansk": "Dobbelt krydsparade med håndkant i skridthøjde", "retning": "Gedan / lavt/skridt", "vaaben": "Shuto / håndkant"}, {"niveau": "3. kyu", "kategori": "Parader", "japansk": "Shuto jodan juji uke", "dansk": "Dobbelt krydsparade med håndkant i hovedhøjde", "retning": "Jodan / hoved", "vaaben": "Shuto / håndkant"}, {"niveau": "3. kyu", "kategori": "Spark", "japansk": "Heisoku mawashi tobi geri", "dansk": "Flyvende cirkelspark", "retning": null, "vaaben": "Heisoku / vrist/overside fod"}, {"niveau": "3. kyu", "kategori": "Spark", "japansk": "Kakato ushiro mawashi geri", "dansk": "Baglæns cirkelspark", "retning": "Ushiro / bagud", "vaaben": "Kakato / hæl"}, {"niveau": "3. kyu", "kategori": "Spark", "japansk": "Nidan mae tobi geri", "dansk": "Dobbelt flyvende frontspark", "retning": "Mae / forlæns", "vaaben": null}, {"niveau": "3. kyu", "kategori": "Spark", "japansk": "Sokuto ushiro uchi keage geri", "dansk": "Baglæns cirkulært strakt spark", "retning": "Ushiro / bagud; Uchi / indvendig", "vaaben": "Sokuto / fodkant"}, {"niveau": "3. kyu", "kategori": "Stillinger", "japansk": "Kake dachi", "dansk": "Krydsstilling", "retning": null, "vaaben": null}, {"niveau": "3. kyu", "kategori": "Stød og slag", "japansk": "Shotei chudan uchi", "dansk": "Slag med håndfladekant i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": "Shotei / håndfladekant"}, {"niveau": "3. kyu", "kategori": "Stød og slag", "japansk": "Shotei gedan uchi", "dansk": "Slag med håndfladekant i skridthøjde", "retning": "Gedan / lavt/skridt; Uchi / indvendig", "vaaben": "Shotei / håndfladekant"}, {"niveau": "3. kyu", "kategori": "Stød og slag", "japansk": "Shotei jodan uchi", "dansk": "Slag med håndfladekant i hagehøjde", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Shotei / håndfladekant"}, {"niveau": "2. kyu", "kategori": "Parader", "japansk": "Koken chudan uke", "dansk": "Håndledsparade i mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": "Koken / håndled"}, {"niveau": "2. kyu", "kategori": "Parader", "japansk": "Koken gedan uke", "dansk": "Håndledsparade i skridthøjde", "retning": "Gedan / lavt/skridt", "vaaben": "Koken / håndled"}, {"niveau": "2. kyu", "kategori": "Parader", "japansk": "Koken jodan uke", "dansk": "Håndledsparade i hagehøjde", "retning": "Jodan / hoved", "vaaben": "Koken / håndled"}, {"niveau": "2. kyu", "kategori": "Spark", "japansk": "Kakato ushiro tobi geri", "dansk": "Baglæns flyvende spark", "retning": "Ushiro / bagud", "vaaben": "Kakato / hæl"}, {"niveau": "2. kyu", "kategori": "Stød og slag", "japansk": "Haisho chudan uchi", "dansk": "Slag med bagsiden af hånden i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": "Haisho / bagside af hånd"}, {"niveau": "2. kyu", "kategori": "Stød og slag", "japansk": "Haisho jodan uchi", "dansk": "Slag med bagsiden af hånden i hovedhøjde", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Haisho / bagside af hånd"}, {"niveau": "2. kyu", "kategori": "Stød og slag", "japansk": "Koken chudan uchi", "dansk": "Håndledsslag i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": "Koken / håndled"}, {"niveau": "2. kyu", "kategori": "Stød og slag", "japansk": "Koken gedan uchi", "dansk": "Håndledsslag i skridthøjde", "retning": "Gedan / lavt/skridt; Uchi / indvendig", "vaaben": "Koken / håndled"}, {"niveau": "2. kyu", "kategori": "Stød og slag", "japansk": "Koken jodan uchi", "dansk": "Håndledsslag i hagehøjde", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Koken / håndled"}, {"niveau": "1. kyu", "kategori": "Spark", "japansk": "Kakato ushiro mawashi tobi geri", "dansk": "Baglæns flyvende cirkelspark", "retning": "Ushiro / bagud", "vaaben": "Kakato / hæl"}, {"niveau": "1. kyu", "kategori": "Stillinger", "japansk": "Moro ashi dachi", "dansk": "Stilling med forskudt parallelle fødder", "retning": null, "vaaben": null}, {"niveau": "1. kyu", "kategori": "Stød og slag", "japansk": "Hiraken chudan tsuki", "dansk": "Stød med mellemste fingerleds knoer i mellemgulvshøjde", "retning": "Chudan / mellemgulv", "vaaben": "Hiraken / mellemste fingerledsknoer"}, {"niveau": "1. kyu", "kategori": "Stød og slag", "japansk": "Hiraken gedan tsuki", "dansk": "Stød med mellemste fingerleds knoer i skridthøjde", "retning": "Gedan / lavt/skridt", "vaaben": "Hiraken / mellemste fingerledsknoer"}, {"niveau": "1. kyu", "kategori": "Stød og slag", "japansk": "Hiraken jodan mawashi uchi", "dansk": "Cirkulært slag med mellemste fingerleds knoer i hovedhøjde", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Hiraken / mellemste fingerledsknoer"}, {"niveau": "1. kyu", "kategori": "Stød og slag", "japansk": "Hiraken jodan tsuki", "dansk": "Stød med mellemste fingerleds knoer i hovedhøjde", "retning": "Jodan / hoved", "vaaben": "Hiraken / mellemste fingerledsknoer"}, {"niveau": "1. kyu", "kategori": "Stød og slag", "japansk": "Hiraken oroshi uchi", "dansk": "Nedadgående slag med mellemste fingerleds knoer i hovedhøjde", "retning": "Uchi / indvendig", "vaaben": "Hiraken / mellemste fingerledsknoer"}, {"niveau": "1. Dan", "kategori": "Spark", "japansk": "Sokuto yoko tobi geri", "dansk": "Flyvende sidelæns spark", "retning": "Yoko / sidelæns", "vaaben": "Sokuto / fodkant"}, {"niveau": "1. Dan", "kategori": "Spark", "japansk": "Usu Kaiten Tobi Geri", "dansk": "Udvendigt strakt spark efterfulgt af flyvende udvendigt strakt spark (møllespark)", "retning": null, "vaaben": null}, {"niveau": "1. Dan", "kategori": "Stød og slag", "japansk": "Enkai gyaku tsuki", "dansk": "Kombination af tensho-parade og stød over bageste ben fra forlæns stilling", "retning": null, "vaaben": null}, {"niveau": "1. Dan", "kategori": "Stød og slag", "japansk": "Keiko jodan uchi", "dansk": "Stød med samlede fingerspidser i hovedhøjde", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": null}, {"niveau": "1. Dan", "kategori": "Stød og slag", "japansk": "Toho jodan uchi", "dansk": "Stød med mellemrum mellem tommel- og pegefinger mod halsen", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": null}, {"niveau": "2. Dan", "kategori": "Parader", "japansk": "Gedan Shuto Morote Uke", "dansk": "Dobbelt ned-/udadgående parade med håndkanten", "retning": "Gedan / lavt/skridt", "vaaben": "Shuto / håndkant"}, {"niveau": "2. Dan", "kategori": "Spark", "japansk": "Kakato Age Ushiro Geri", "dansk": "Bagudrettet opadgående hælspark", "retning": "Ushiro / bagud", "vaaben": "Kakato / hæl"}, {"niveau": "2. Dan", "kategori": "Stød og slag", "japansk": "Ryutoken Chudan Uchi", "dansk": "Cirkulært stød med mellemledsknoer i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": "Ryutoken / mellemledsknoer"}, {"niveau": "2. Dan", "kategori": "Stød og slag", "japansk": "Ryutoken Jodan Uchi", "dansk": "Cirkulært stød med mellemledsknoer mod hovedet", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Ryutoken / mellemledsknoer"}, {"niveau": "3. Dan", "kategori": "Parader", "japansk": "Gedan Shotei Morote Uke", "dansk": "Dobbelt nedadgående parade med håndfladen", "retning": "Gedan / lavt/skridt", "vaaben": "Shotei / håndfladekant"}, {"niveau": "3. Dan", "kategori": "Parader", "japansk": "Kake Uke Jodan", "dansk": "Krogblokade med håndkanten mod hovedet", "retning": "Jodan / hoved", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Parader", "japansk": "Morote Kake Uke", "dansk": "Dobbelt krogblokade med håndkanten mod hovedet", "retning": null, "vaaben": null}, {"niveau": "3. Dan", "kategori": "Parader", "japansk": "Morote Kake Uke", "dansk": "Forstærket krogblokade med håndkanten mod hovedet", "retning": null, "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Hitosashi Yubi Ippon Chudan Ken Tsuki", "dansk": "Stød med pegefinger mellemledsknoen", "retning": "Chudan / mellemgulv", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Hitosashi Yubi Ippon Jodan Ken Tsuki", "dansk": "Stød med pegefinger mellemledsknoen", "retning": "Jodan / hoved", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Morote Jodan Haito Uchi", "dansk": "Dobbeltslag med håndkant ved tommelfinger mod hovedet", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": "Haito / håndkant ved tommelfinger"}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Naka Yubi Ippon Chudan Ken Uchi", "dansk": "Cirkulært slag med langefinger mellemledsknoen i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Naka Yubi Ippon Jodan Ken Uchi", "dansk": "Cirkulært slag med langefinger mellemledsknoen mod hovedet", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Oya Yubi Ippon Chudan Ken Uchi", "dansk": "Cirkulært slag med tommelfinger mellemledsknoen i mellemgulvshøjde", "retning": "Chudan / mellemgulv; Uchi / indvendig", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Oya Yubi Ippon Gedan Ken Tsuki", "dansk": "Stød med tommelfinger mellemledsknoen i skridthøjde", "retning": "Gedan / lavt/skridt", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Oya Yubi Ippon Jodan Ken Uchi", "dansk": "Cirkulært slag med tommelfinger mellemledsknoen mod hovedet", "retning": "Jodan / hoved; Uchi / indvendig", "vaaben": null}, {"niveau": "3. Dan", "kategori": "Stød og slag", "japansk": "Uraken Morote Sayu Uchi", "dansk": "Dobbelt sidelæns omvendt knoslag", "retning": "Uchi / indvendig", "vaaben": "Uraken / omvendt kno"}];
+
+let selectedLevels = [];
+let selectedCategories = [];
+let quizItems = [];
+let currentIndex = 0;
+let revealed = false;
+let correctCount = 0;
+let currentJapanese = '';
+
+function getAllLevels() {
+    const order = ['12. kyu', '11. kyu', '10. kyu', '9. kyu', '8. kyu', '7. kyu', '6. kyu', '5. kyu', '4. kyu', '3. kyu', '2. kyu', '1. kyu', '1. Dan', '2. Dan', '3. Dan'];
+    const unique = Array.from(new Set(allData.map(d => d.niveau)));
+    return unique.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+}
+
+function getAllCategories() {
+    return Array.from(new Set(allData.map(d => d.kategori))).sort();
+}
+
+function initConfig() {
+    selectedLevels = ['12. kyu'];
+    selectedCategories = ['Spark', 'Stillinger', 'Stød og slag', 'Parader'];
+    renderConfig();
+}
+
+function renderConfig() {
+    const levelsHtml = getAllLevels().map(level => 
+        `<button ontouchend="toggleLevel('${level}')" onclick="toggleLevel('${level}')" class="${selectedLevels.includes(level) ? 'selected' : ''}">${level}</button>`
+    ).join('');
+    document.getElementById('levels').innerHTML = levelsHtml;
+    
+    const categoriesHtml = getAllCategories().map(cat => 
+        `<button ontouchend="toggleCategory('${cat}')" onclick="toggleCategory('${cat}')" class="${selectedCategories.includes(cat) ? 'selected' : ''}">${cat}</button>`
+    ).join('');
+    document.getElementById('categories').innerHTML = categoriesHtml;
+}
+
+function toggleLevel(level) {
+    if (selectedLevels.includes(level)) {
+        selectedLevels = selectedLevels.filter(l => l !== level);
+    } else {
+        selectedLevels.push(level);
+    }
+    renderConfig();
+}
+
+function toggleCategory(cat) {
+    if (selectedCategories.includes(cat)) {
+        selectedCategories = selectedCategories.filter(c => c !== cat);
+    } else {
+        selectedCategories.push(cat);
+    }
+    renderConfig();
+}
+
+function selectAllLevels() {
+    selectedLevels = getAllLevels();
+    renderConfig();
+}
+
+function selectAllCategories() {
+    selectedCategories = getAllCategories();
+    renderConfig();
+}
+
+function startQuiz() {
+    if (selectedLevels.length === 0 || selectedCategories.length === 0) {
+        alert('Vælg mindst ét niveau og en kategori!');
+        return;
+    }
+    
+    quizItems = allData.filter(d => 
+        selectedLevels.includes(d.niveau) && selectedCategories.includes(d.kategori)
+    ).sort(() => Math.random() - 0.5);
+    
+    currentIndex = 0;
+    revealed = false;
+    correctCount = 0;
+    
+    showScreen('quiz-screen');
+    renderQuiz();
+}
+
+function renderQuiz() {
+    const item = quizItems[currentIndex];
+    currentJapanese = item.japansk;
+    
+    const percent = ((currentIndex) / quizItems.length) * 100;
+    document.getElementById('progress-bar').style.width = percent + '%';
+    document.getElementById('progress-text').textContent = (currentIndex + 1) + ' / ' + quizItems.length;
+    
+    if (revealed) {
+        document.getElementById('card-content').innerHTML = '<div class="label">Dansk svar:</div>' + item.dansk;
+        document.getElementById('quiz-card').ontouchend = null;
+        document.getElementById('quiz-card').onclick = null;
+        document.getElementById('feedback-buttons').style.display = 'flex';
+    } else {
+        document.getElementById('card-content').innerHTML = item.japansk;
+        document.getElementById('quiz-card').ontouchend = function(e) { e.preventDefault(); revealAnswer(); };
+        document.getElementById('quiz-card').onclick = function() { revealAnswer(); };
+        document.getElementById('feedback-buttons').style.display = 'none';
+    }
+    
+    document.getElementById('quiz-card').className = revealed ? 'card revealed' : 'card';
+    document.getElementById('correct-count').textContent = correctCount;
+    document.getElementById('current-count').textContent = currentIndex;
+}
+
+function revealAnswer() {
+    if (revealed) return;
+    revealed = true;
+    renderQuiz();
+}
+
+function speak() {
+    const utterance = new SpeechSynthesisUtterance(currentJapanese);
+    utterance.lang = 'ja-JP';
+    utterance.rate = 0.8;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+}
+
+function markCorrect() {
+    correctCount++;
+    nextQuestion();
+}
+
+function markWrong() {
+    nextQuestion();
+}
+
+function nextQuestion() {
+    currentIndex++;
+    revealed = false;
+    
+    if (currentIndex >= quizItems.length) {
+        showResult();
+    } else {
+        renderQuiz();
+    }
+}
+
+function showResult() {
+    const percent = Math.round((correctCount / quizItems.length) * 100);
+    document.getElementById('result-score').textContent = correctCount + ' / ' + quizItems.length;
+    document.getElementById('result-percent').textContent = percent + '%';
+    showScreen('result-screen');
+}
+
+function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+}
+
+function goBack() {
+    showScreen('config-screen');
+    initConfig();
+}
+
+initConfig();
+</script>
+
+</body>
+</html>
